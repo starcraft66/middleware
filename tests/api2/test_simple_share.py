@@ -11,7 +11,7 @@ from middlewared.test.integration.utils import call
 PASSWD = ''.join(secrets.choice(string.ascii_letters + string.digits) for i in range(10))
 
 
-test__no_smb_user_validation_error():
+def test__no_smb_user_validation_error():
     assert call('user.query', [['smb', '=', True]], {'count': True}) == 0
 
     with pytest.raises(ValidationErrors):

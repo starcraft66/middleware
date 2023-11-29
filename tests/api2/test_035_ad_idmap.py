@@ -91,7 +91,7 @@ def test_04_name_sid_resolution(request):
 
     # convert sids back into unixids
     unixids = call('idmap.convert_sids', list(sidlist))
-    assert set([x['id'] for x in unixids['mapped'].values()) == groups
+    assert set([x['id'] for x in unixids['mapped'].values()]) == groups
 
 
 @pytest.mark.dependency(name="GATHERED_BACKEND_OPTIONS")

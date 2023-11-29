@@ -86,7 +86,7 @@ def test_04_name_sid_resolution(request):
 
     # convert list of gids into sids
     sids = call('idmap.convert_unixids', [{'id_type': 'GROUP', 'id': x} for x in groups])
-    sidlist = set(sids['mapped'].values())
+    sidlist = set([x['sid'] for x in sids['mapped'].values()])
     assert len(groups) == len(sidlist)
 
     # convert sids back into unixids

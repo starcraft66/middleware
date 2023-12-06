@@ -11,7 +11,7 @@ from middlewared.auth import (SessionManagerCredentials, UserSessionManagerCrede
                               UnixSocketSessionManagerCredentials, RootTcpSocketSessionManagerCredentials,
                               LoginPasswordSessionManagerCredentials, ApiKeySessionManagerCredentials,
                               TrueNasNodeSessionManagerCredentials)
-from middlewared.schema import accepts, Any, Bool, Datetime, Dict, Int, Password, Patch, returns, Str
+from middlewared.schema import accepts, Any, Bool, Datetime, Dict, Int, Password, Patch, Ref, returns, Str
 from middlewared.service import (
     Service, filterable, filterable_returns, filter_list, no_auth_required, no_authz_required,
     pass_app, private, cli_private, CallError,
@@ -587,6 +587,22 @@ class AuthService(Service):
             attributes = {}
 
         return {**user, 'attributes': attributes}
+
+    @no_authz_required
+    @accepts(Ref('2fa_configuration_options'))
+    @returns(Ref('user_entry'))
+    @pass_app()
+    async def renew_2fa_secret(self, app, twofactor_options):
+        """
+        Renew currently authenticated user's two-factor authentication secret.
+
+        `2fa_configuration_options.otp_digits` represents number of allowed digits in the OTP.
+
+        `2fa_configuration_options.interval` is time duration in seconds specifying OTP expiration time
+        from it's creation time.
+        """
+        user = await self._me(app)
+        return await self.middleware.call('user.renew_2fa_secret', user['pw_name'], twofactor_options)
 
     @no_authz_required
     @accepts(

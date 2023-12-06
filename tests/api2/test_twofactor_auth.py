@@ -9,7 +9,8 @@ sys.path.append(apifolder)
 
 from middlewared.test.integration.assets.account import user as user_create
 from middlewared.test.integration.assets.two_factor_auth import enabled_twofactor_auth, get_user_secret, get_2fa_totp_token
-from middlewared.test.integration.utils import call
+from middlewared.test.integration.assets.account import unprivileged_user
+from middlewared.test.integration.utils import call, client
 
 
 TEST_USERNAME = 'test2fauser'
@@ -128,6 +129,32 @@ def test_user_2fa_secret_renewal():
                 'auth.get_login_user', TEST_USERNAME_2, TEST_PASSWORD_2,
                 get_2fa_totp_token(get_user_secret(user_obj['id']))
             ) is not None
+
+
+def test_restricted_user_2fa_secret_renewal():
+    with unprivileged_user(
+        TEST_USERNAME,
+        'TEST_2FA_GROUP',
+        'TEST_2FA_PRIVILEGE',
+        [], False, roles=['READONLY']
+    ) as acct:
+        with enabled_twofactor_auth():
+            with client(auth=acct) as c:
+                c.call('auth.renew_2fa_secret', TEST_TWOFACTOR_INTERVAL)
+                user_obj = call('user.query', [['username', '=', acct[0]]], {'get': True})
+                assert call(
+                    'auth.get_login_user', acct[0], acct[1],
+                    get_2fa_totp_token(get_user_secret(user_obj['id']))
+                ) is not None
+                secret = get_user_secret(user_obj['id'])
+
+                c.call('auth.renew_2fa_secret', TEST_TWOFACTOR_INTERVAL)
+                assert get_user_secret(user_obj['id'])['secret'] != secret
+
+                assert call(
+                    'auth.get_login_user', acct[0], acct[1],
+                    get_2fa_totp_token(get_user_secret(user_obj['id']))
+                ) is not None
 
 
 def test_multiple_users_login_with_otp():

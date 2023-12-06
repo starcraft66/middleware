@@ -138,6 +138,7 @@ class UserService(Service):
             '2fa_configuration_options',
             Int('otp_digits', validators=[Range(min_=6, max_=8)], required=True),
             Int('interval', validators=[Range(min_=5)], required=True),
+            register=True,
             update=True,
         )
     )
